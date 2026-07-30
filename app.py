@@ -47,8 +47,8 @@ class BatteryAlertApp:
         self._charging_session_id: int = 0
         self._alert_session_active = False
 
-        self._root: Optional[Any] = None
-        if HAS_TKINTER:
+        self._root = None
+        if HAS_TKINTER and sys.platform != "darwin":
             try:
                 self._root = tk.Tk()
                 self._root.withdraw()
@@ -77,7 +77,7 @@ class BatteryAlertApp:
             on_exit=self.exit_app,
         )
 
-        if HAS_TKINTER and self._root is not None:
+        if sys.platform != "darwin" and HAS_TKINTER and self._root is not None:
             # Run system tray in background thread, keep main thread for Tkinter event loop
             self._tray.run_detached()
             try:
@@ -85,7 +85,7 @@ class BatteryAlertApp:
             except KeyboardInterrupt:
                 self.exit_app()
         else:
-            # Fallback: run tray loop on main thread if Tkinter is unavailable
+            # Fallback: run tray loop on main thread if Tkinter is unavailable (or on macOS)
             self._tray.run()
 
     def _schedule_open_settings(self) -> None:

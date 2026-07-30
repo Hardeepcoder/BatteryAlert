@@ -35,28 +35,56 @@ Battery Alert monitors your laptop's battery charging telemetry in real-time. Wh
 
 ---
 
-## 📦 Installation
+## 📦 Supported Platforms
+
+### 🪟 Windows
+- **Supported OS**: Windows 10, Windows 11
+- **Supported Architectures**: x64 (64-bit Intel/AMD), ARM64 (via native 64-bit emulation)
+
+### 🍎 macOS
+- **Supported OS**: macOS 11 (Big Sur) and newer (including macOS 12 Monterey, macOS 13 Ventura, macOS 14 Sonoma, macOS 15 Sequoia)
+- **Supported Architectures**:
+  - Intel Macs (x86_64)
+  - Apple Silicon Macs (M1, M2, M3, M4)
+
+---
+
+## 📥 Installation
 
 Download pre-compiled installers directly from our official [GitHub Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
 
 ### 🪟 Windows Setup (Recommended)
 1. Download **`BatteryAlertSetup.exe`** from [Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
 2. Double-click `BatteryAlertSetup.exe` to run the professional setup wizard.
-3. The installer includes:
-   - Automatic installation to `Program Files\Battery Charge Alert`
-   - Start Menu shortcut & optional Desktop shortcut
-   - Clean Add/Remove Programs uninstaller
+3. The installer automatically sets up:
+   - Installation to `Program Files\Battery Charge Alert`
+   - Start Menu and Desktop shortcuts
+   - Clean Add/Remove Programs integration & Uninstaller
 4. Look for the battery icon in your Windows System Tray (near the clock).
 
 #### 🛒 Microsoft Store & Silent Installation Switches
 `BatteryAlertSetup.exe` supports fully silent, non-interactive installation suitable for **Microsoft Store EXE submission** and enterprise deployment:
-```cmd
-BatteryAlertSetup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
-```
+- **Silent Install Command**:
+  ```cmd
+  BatteryAlertSetup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+  ```
+- **Silent Uninstall Command**:
+  ```cmd
+  "{uninstaller_path}" /VERYSILENT /NORESTART
+  ```
+- **Installer Return Codes**:
+  - `0`: Success (Installation completed successfully)
+  - `1`: Cancelled (User cancelled the installation or clicked Cancel)
+  - `2`: Reboot required (Installation succeeded but requires a system reboot)
+  - `3`: Installation in progress (Another instance of setup is already running)
 
 ### 🍎 macOS Setup
-1. Download **`BatteryAlert.dmg`** from [Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
-2. Open `BatteryAlert.dmg` and drag `BatteryAlert.app` to your **Applications** folder.
+We provide separate optimized packages for each macOS architecture:
+- **For Intel-based Macs**: Download **`BatteryAlert-macOS-Intel.dmg`**
+- **For Apple Silicon Macs (M1/M2/M3/M4)**: Download **`BatteryAlert-macOS-AppleSilicon.dmg`**
+
+1. Open the downloaded `.dmg` file.
+2. Drag `BatteryAlert.app` to your **Applications** folder.
 3. Launch `BatteryAlert` from Applications. It will appear in your top Menu Bar.
 
 ---
@@ -89,17 +117,30 @@ python app.py
   iscc installer.iss
   ```
 
-- **macOS Disk Image (`BatteryAlert.dmg`)**:
+- **macOS Disk Image (`BatteryAlert-macOS-Intel.dmg` or `BatteryAlert-macOS-AppleSilicon.dmg`)**:
   ```bash
-  pyinstaller --noconfirm --onedir --windowed --name "BatteryAlert" --icon "icon/app.icns" --add-data "assets:assets" --add-data "config:config" --add-data "icon:icon" app.py
-  hdiutil create -volname "BatteryAlert" -srcfolder "dist/BatteryAlert.app" -ov -format UDZO "dist/BatteryAlert.dmg"
+  pyinstaller --noconfirm --onedir --windowed --name "BatteryAlert" --icon "icon/app.icns" --add-data "assets:assets" --add-data "config:config" --add-data "icon:icon" --hidden-import "AppKit" --hidden-import "objc" app.py
+  hdiutil create -volname "BatteryAlert" -srcfolder "dist/BatteryAlert.app" -ov -format UDZO "dist/BatteryAlert-<suffix>.dmg"
   ```
+
+---
+
+## 🚀 Release Process & GitHub Actions
+
+The repository has an automated CI/CD pipeline configured with GitHub Actions:
+- **Trigger**: Every time a git tag starting with `v` (e.g. `v1.1.0`) is pushed to the repository.
+- **Workflow Steps**:
+  1. Runs `build-windows` on `windows-latest` to compile `BatteryAlertSetup.exe`.
+  2. Runs `build-macos` on `macos-15-intel` to build the Intel image `BatteryAlert-macOS-Intel.dmg`.
+  3. Runs `build-macos` on `macos-latest` (Apple Silicon runner) to build `BatteryAlert-macOS-AppleSilicon.dmg`.
+  4. Runs `release` on `ubuntu-latest` to download all three built assets, calculate their SHA-256 checksums, and publish them to a new GitHub Release with the checksum details appended to the release description.
 
 ---
 
 ## 📜 Version History
 
-- **`v1.0.2`**: Introduced official Windows Inno Setup installer (`BatteryAlertSetup.exe`) with Microsoft Store silent switches, Start Menu shortcuts, clean uninstaller, and GitHub Release automation.
+- **`v1.1.0`**: Split macOS packaging into distinct `BatteryAlert-macOS-Intel.dmg` and `BatteryAlert-macOS-AppleSilicon.dmg` packages to fix Intel compatibility. Configured AppKit Cocoa thread handling on macOS main thread. Added auto-update setting preparation structure.
+- **`v1.0.2`**: Introduced official Windows Inno Setup installer with Microsoft Store silent switches, Start Menu shortcuts, clean uninstaller, and GitHub Release automation.
 - **`v1.0.0`**: Initial release with native macOS Cocoa dialogs, Windows system tray, voice selection, customizable alert thresholds, and automated GitHub Release CI pipeline.
 
 ---

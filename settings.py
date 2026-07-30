@@ -12,6 +12,7 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     "alert_type": "Voice + Notification",
     "reminder": "Alert Once",
     "startup": False,
+    "check_updates": True,
 }
 
 VALID_BATTERY_LEVELS = [80, 90, 95, 100]
@@ -58,6 +59,7 @@ class SettingsManager:
                     "alert_type": data.get("alert_type", DEFAULT_SETTINGS["alert_type"]),
                     "reminder": data.get("reminder", DEFAULT_SETTINGS["reminder"]),
                     "startup": bool(data.get("startup", DEFAULT_SETTINGS["startup"])),
+                    "check_updates": bool(data.get("check_updates", DEFAULT_SETTINGS["check_updates"])),
                 }
 
                 # Validate ranges

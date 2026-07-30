@@ -25,6 +25,12 @@ SolidCompression=yes
 WizardStyle=modern
 OutputBaseFilename=BatteryAlertSetup
 OutputDir=dist
+ArchitecturesAllowed=x64 arm64
+ArchitecturesInstallIn64BitMode=x64 arm64
+VersionInfoVersion={#MyAppVersion}
+VersionInfoCompany={#MyAppPublisher}
+VersionInfoDescription=Battery Charge Alert Installer
+VersionInfoCopyright=Copyright (C) 2026 CodingsArt
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
