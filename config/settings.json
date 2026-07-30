@@ -1,0 +1,7 @@
+{
+  "battery_level": 100,
+  "voice": "Female",
+  "alert_type": "Voice + Notification",
+  "reminder": "Alert Once",
+  "startup": false
+}
