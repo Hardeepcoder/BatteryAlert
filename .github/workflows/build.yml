@@ -1,15 +1,20 @@
-name: Build Battery Alert (Windows .exe & macOS .dmg)
+name: Build & Release Battery Alert
 
 on:
   push:
     branches: [ main, master ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
-    name: Build Windows (.exe)
+    name: Build Windows Executable (.exe)
     runs-on: windows-latest
     steps:
       - name: Checkout Code
@@ -25,28 +30,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Build Windows Executable with PyInstaller
+      - name: Build Standalone Windows Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onedir --windowed --name "BatteryAlert" `
+          pyinstaller --noconfirm --onefile --windowed --name "BatteryAlert" `
             --icon "icon/app.ico" `
             --add-data "assets;assets" `
             --add-data "config;config" `
             --add-data "icon;icon" `
             app.py
 
-      - name: Compress Windows Executable Output
-        shell: powershell
-        run: |
-          Compress-Archive -Path dist/BatteryAlert/* -DestinationPath dist/BatteryAlert-Windows.zip
-
-      - name: Upload Windows Executable (.zip)
+      - name: Upload Windows Asset
         uses: actions/upload-artifact@v4
         with:
-          name: BatteryAlert-Windows-exe
-          path: dist/BatteryAlert-Windows.zip
+          name: windows-executable
+          path: dist/BatteryAlert.exe
 
   build-macos:
-    name: Build macOS (.dmg)
+    name: Build macOS Installer (.dmg)
     runs-on: macos-latest
     steps:
       - name: Checkout Code
@@ -75,8 +75,35 @@ jobs:
         run: |
           hdiutil create -volname "BatteryAlert" -srcfolder "dist/BatteryAlert.app" -ov -format UDZO "dist/BatteryAlert.dmg"
 
-      - name: Upload macOS DMG (.dmg)
+      - name: Upload macOS Asset
         uses: actions/upload-artifact@v4
         with:
-          name: BatteryAlert-macOS-dmg
+          name: macos-installer
           path: dist/BatteryAlert.dmg
+
+  release:
+    name: Create Official GitHub Release
+    needs: [build-windows, build-macos]
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows Asset
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-executable
+
+      - name: Download macOS Asset
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-installer
+
+      - name: Create GitHub Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            BatteryAlert.exe
+            BatteryAlert.dmg
+          name: Battery Alert ${{ github.ref_name }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

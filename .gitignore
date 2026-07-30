@@ -2,20 +2,28 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
 
-# PyInstaller
+# PyInstaller build outputs
 build/
 dist/
 *.spec
 
-# Local Environment
+# Local Environment & IDEs
 .venv/
 env/
 venv/
 ENV/
+.vscode/
+.idea/
 
 # OS generated files
 .DS_Store
 .DS_Store?
 ehthumbs.db
 Thumbs.db
+
+# Testing & Logs
+.pytest_cache/
+*.log
+.env
