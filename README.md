@@ -39,10 +39,20 @@ Battery Alert monitors your laptop's battery charging telemetry in real-time. Wh
 
 Download pre-compiled installers directly from our official [GitHub Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
 
-### 🪟 Windows Setup
-1. Download **`BatteryAlert.exe`** from [Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
-2. Double-click `BatteryAlert.exe` to run.
-3. Look for the battery icon in your Windows System Tray (near the clock).
+### 🪟 Windows Setup (Recommended)
+1. Download **`BatteryAlertSetup.exe`** from [Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
+2. Double-click `BatteryAlertSetup.exe` to run the professional setup wizard.
+3. The installer includes:
+   - Automatic installation to `Program Files\Battery Charge Alert`
+   - Start Menu shortcut & optional Desktop shortcut
+   - Clean Add/Remove Programs uninstaller
+4. Look for the battery icon in your Windows System Tray (near the clock).
+
+#### 🛒 Microsoft Store & Silent Installation Switches
+`BatteryAlertSetup.exe` supports fully silent, non-interactive installation suitable for **Microsoft Store EXE submission** and enterprise deployment:
+```cmd
+BatteryAlertSetup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+```
 
 ### 🍎 macOS Setup
 1. Download **`BatteryAlert.dmg`** from [Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
@@ -56,6 +66,7 @@ Download pre-compiled installers directly from our official [GitHub Releases](ht
 ### Requirements
 - Python 3.9+
 - macOS 11+ or Windows 10/11
+- Inno Setup 6 (for Windows `.exe` installer compilation)
 
 ### Setup Steps
 ```bash
@@ -70,14 +81,15 @@ pip install -r requirements.txt
 python app.py
 ```
 
-### Packaging Executables
+### Packaging Executables & Installers
 
-- **Windows Executable**:
+- **Windows Setup Installer (`BatteryAlertSetup.exe`)**:
   ```cmd
-  pyinstaller --noconfirm --onefile --windowed --name "BatteryAlert" --icon "icon/app.ico" --add-data "assets;assets" --add-data "config;config" --add-data "icon;icon" app.py
+  pyinstaller --noconfirm --onedir --windowed --name "BatteryAlert" --icon "icon/app.ico" --add-data "assets;assets" --add-data "config;config" --add-data "icon;icon" app.py
+  iscc installer.iss
   ```
 
-- **macOS DMG**:
+- **macOS Disk Image (`BatteryAlert.dmg`)**:
   ```bash
   pyinstaller --noconfirm --onedir --windowed --name "BatteryAlert" --icon "icon/app.icns" --add-data "assets:assets" --add-data "config:config" --add-data "icon:icon" app.py
   hdiutil create -volname "BatteryAlert" -srcfolder "dist/BatteryAlert.app" -ov -format UDZO "dist/BatteryAlert.dmg"
@@ -87,12 +99,14 @@ python app.py
 
 ## 📜 Version History
 
-- **`v1.0.0`**: Initial official release with native macOS Cocoa dialogs, Windows system tray, voice selection, customizable alert thresholds, and automated GitHub Release CI pipeline.
+- **`v1.0.2`**: Introduced official Windows Inno Setup installer (`BatteryAlertSetup.exe`) with Microsoft Store silent switches, Start Menu shortcuts, clean uninstaller, and GitHub Release automation.
+- **`v1.0.0`**: Initial release with native macOS Cocoa dialogs, Windows system tray, voice selection, customizable alert thresholds, and automated GitHub Release CI pipeline.
 
 ---
 
 ## 🗺️ Roadmap
 
+- [ ] Microsoft Store App package submission.
 - [ ] Custom WAV file voice uploads.
 - [ ] Low battery percentage alert option (e.g. alert when battery drops below 20%).
 - [ ] Linux desktop support via LibNotify and AppIndicator.
