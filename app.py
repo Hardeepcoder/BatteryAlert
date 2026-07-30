@@ -69,6 +69,15 @@ class BatteryAlertApp:
         self._monitor_thread = threading.Thread(target=self._monitoring_loop, daemon=True)
         self._monitor_thread.start()
 
+        # Send startup notification to guide the user
+        try:
+            self._notifier.notify(
+                "Battery Alert Running",
+                "The app is running in the background. Click the icon in the top Menu Bar to open settings."
+            )
+        except Exception as e:
+            print(f"Failed to send startup notification: {e}")
+
         # Run system tray menu
         self._tray = SystemTray(
             on_open_settings=self._schedule_open_settings,
