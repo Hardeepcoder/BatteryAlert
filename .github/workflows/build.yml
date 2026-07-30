@@ -58,8 +58,17 @@ jobs:
           path: dist/BatteryAlertSetup.exe
 
   build-macos:
-    name: Build macOS Installer (BatteryAlert.dmg)
-    runs-on: macos-latest
+    name: Build macOS Installer (${{ matrix.arch-name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-13
+            arch-name: Intel
+            dmg-suffix: Intel
+          - os: macos-latest
+            arch-name: Apple Silicon
+            dmg-suffix: Apple-Silicon
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -85,13 +94,13 @@ jobs:
 
       - name: Create DMG Disk Image
         run: |
-          hdiutil create -volname "BatteryAlert" -srcfolder "dist/BatteryAlert.app" -ov -format UDZO "dist/BatteryAlert.dmg"
+          hdiutil create -volname "BatteryAlert" -srcfolder "dist/BatteryAlert.app" -ov -format UDZO "dist/BatteryAlert-${{ matrix.dmg-suffix }}.dmg"
 
       - name: Upload macOS Asset
         uses: actions/upload-artifact@v4
         with:
-          name: macos-installer
-          path: dist/BatteryAlert.dmg
+          name: macos-installer-${{ matrix.dmg-suffix }}
+          path: dist/BatteryAlert-${{ matrix.dmg-suffix }}.dmg
 
   release:
     name: Create Official GitHub Release
@@ -104,23 +113,30 @@ jobs:
         with:
           name: windows-installer
 
-      - name: Download macOS Asset
+      - name: Download macOS Intel Asset
         uses: actions/download-artifact@v4
         with:
-          name: macos-installer
+          name: macos-installer-Intel
+
+      - name: Download macOS Apple Silicon Asset
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-installer-Apple-Silicon
 
       - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v2
         with:
           files: |
             BatteryAlertSetup.exe
-            BatteryAlert.dmg
+            BatteryAlert-Intel.dmg
+            BatteryAlert-Apple-Silicon.dmg
           name: Battery Alert ${{ github.ref_name }}
           body: |
             ## 📥 Official Download Links
 
             - 🪟 **Windows Setup Installer**: [Download BatteryAlertSetup.exe](https://github.com/Hardeepcoder/BatteryAlert/releases/download/${{ github.ref_name }}/BatteryAlertSetup.exe)
-            - 🍎 **macOS Disk Image**: [Download BatteryAlert.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/${{ github.ref_name }}/BatteryAlert.dmg)
+            - 🍎 **macOS Disk Image (Intel)**: [Download BatteryAlert-Intel.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/${{ github.ref_name }}/BatteryAlert-Intel.dmg)
+            - 🍎 **macOS Disk Image (Apple Silicon)**: [Download BatteryAlert-Apple-Silicon.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/${{ github.ref_name }}/BatteryAlert-Apple-Silicon.dmg)
 
             ---
             ### 🛠️ Microsoft Store & Silent Install Switches (Windows)
