@@ -63,7 +63,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-13
+          - os: macos-15-intel
             arch-name: Intel
             dmg-suffix: Intel
           - os: macos-latest
