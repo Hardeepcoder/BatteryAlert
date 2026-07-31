@@ -35,23 +35,24 @@ Battery Alert monitors your laptop's battery charging telemetry in real-time. Wh
 
 ---
 
-## 📦 Supported Platforms
+## 📥 Official Download Links
 
-### 🪟 Windows
-- **Supported OS**: Windows 10, Windows 11
-- **Supported Architectures**: x64 (64-bit Intel/AMD), ARM64 (via native 64-bit emulation)
+Download pre-compiled installers directly from our official [GitHub Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
 
-### 🍎 macOS
-- **Supported OS**: macOS 11 (Big Sur) and newer (including macOS 12 Monterey, macOS 13 Ventura, macOS 14 Sonoma, macOS 15 Sequoia)
-- **Supported Architectures**:
-  - Intel Macs (x86_64)
-  - Apple Silicon Macs (M1, M2, M3, M4)
+| Platform | Recommended Package | Direct Download Link |
+| :--- | :--- | :--- |
+| 🤖 **Android** | APK Package (Android 8.0+) | [📥 Download BatteryAlert-Android-v1.0.0.apk](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.3.0/BatteryAlert-Android-v1.0.0.apk) |
+| 🪟 **Windows** | Setup Installer (`.exe`) | [📥 Download BatteryAlertSetup.exe](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.3.0/BatteryAlertSetup.exe) |
+| 🍏 **macOS (Apple Silicon)** | M1/M2/M3/M4 Disk Image | [📥 Download BatteryAlert-macOS-AppleSilicon.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.3.0/BatteryAlert-macOS-AppleSilicon.dmg) |
+| 🍏 **macOS (Intel)** | Intel Mac Disk Image | [📥 Download BatteryAlert-macOS-Intel.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.3.0/BatteryAlert-macOS-Intel.dmg) |
 
 ---
 
-## 📥 Installation
+## 📦 Supported Platforms
 
-Download pre-compiled installers directly from our official [GitHub Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
+### 🤖 Android
+- **Supported OS**: Android 8.0 (Oreo) and newer (Android 9, 10, 11, 12, 13, 14, 15)
+- **Features**: Automatic charging detection foreground service, `LoudnessEnhancer` audio boost (+150% / +200%), multilingual voice alerts (English, Hindi, Punjabi), dynamic Light/Dark theme toggle.
 
 ### 🪟 Windows Setup (Recommended)
 1. Download **`BatteryAlertSetup.exe`** from [Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
