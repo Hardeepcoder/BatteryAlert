@@ -85,8 +85,10 @@ We provide separate optimized packages for each macOS architecture:
 - **For Apple Silicon Macs (M1/M2/M3/M4)**: Download **`BatteryAlert-macOS-AppleSilicon.dmg`**
 
 1. Open the downloaded `.dmg` file.
-2. Drag `BatteryAlert.app` to your **Applications** folder.
-3. Launch `BatteryAlert` from Applications. It will appear in your top Menu Bar.
+2. Drag `BatteryAlert.app` into your **Applications** folder.
+3. **First Launch (macOS Security Bypass)**:
+   - In Finder, open **Applications** ➔ **Right-Click** (or `Control + Click`) on **BatteryAlert.app** and select **Open**.
+   - Click **Open** on the prompt. (Or run `xattr -cr /Applications/BatteryAlert.app` in Terminal).
 
 ---
 
