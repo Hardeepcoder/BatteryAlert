@@ -21,9 +21,29 @@ HAS_APPKIT = False
 if sys.platform == "darwin":
     try:
         import AppKit
+        from Foundation import NSObject
         import objc
         HAS_APPKIT = True
-    except ImportError:
+
+        class VoiceTestTarget(NSObject):
+            def initWithPlayer_voicePop_loudnessPop_(self, player, voice_pop, loudness_pop):
+                self = objc.super(VoiceTestTarget, self).init()
+                if self is not None:
+                    self.player = player
+                    self.voice_pop = voice_pop
+                    self.loudness_pop = loudness_pop
+                return self
+
+            @objc.signature(b'v@:@')
+            def testVoice_(self, sender):
+                try:
+                    v_name = str(self.voice_pop.titleOfSelectedItem())
+                    v_loud = str(self.loudness_pop.titleOfSelectedItem())
+                    self.player.play(v_name, v_loud)
+                except Exception as e:
+                    print(f"Test voice playback error: {e}")
+
+    except Exception:
         HAS_APPKIT = False
 
 # Try Tkinter for Windows UI
@@ -102,13 +122,10 @@ def show_mac_native_settings(settings_manager: SettingsManager, on_save_callback
     btn_test.setTitle_("▶ Test Voice")
     btn_test.setBezelStyle_(AppKit.NSBezelStyleRounded)
 
-    def on_test_click(sender):
-        v_name = pop2.titleOfSelectedItem()
-        v_loud = pop3_v.titleOfSelectedItem()
-        audio_player.play(v_name, v_loud)
-
-    btn_test.setTarget_(btn_test)
-    btn_test.setAction_(objc.selector(on_test_click, signature=b"v@:@"))
+    target_handler = VoiceTestTarget.alloc().initWithPlayer_voicePop_loudnessPop_(audio_player, pop2, pop3_v)
+    btn_test.setTarget_(target_handler)
+    btn_test.setAction_("testVoice:")
+    alert._test_target_handler = target_handler
 
     accessory.addSubview_(lbl1)
     accessory.addSubview_(pop1)
