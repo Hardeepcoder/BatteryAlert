@@ -204,7 +204,7 @@ class SettingsWindow:
         ttk.Label(container, text="Battery Alert Level:", font=("Helvetica", 10)).grid(
             row=2, column=0, sticky="W", pady=8
         )
-        self._battery_var = tk.IntVar(value=current_settings.get("battery_level", 100))
+        self._battery_var = tk.StringVar(value=f"{current_settings.get('battery_level', 100)}%")
         battery_combo = ttk.Combobox(
             container,
             textvariable=self._battery_var,
@@ -212,7 +212,6 @@ class SettingsWindow:
             state="readonly",
             width=20,
         )
-        battery_combo.set(f"{current_settings.get('battery_level', 100)}%")
         battery_combo.grid(row=2, column=1, sticky="E", pady=8, padx=(10, 0))
 
         # 2. Voice Selection
