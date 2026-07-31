@@ -1,4 +1,4 @@
-"""Audio module for playing voice alert files cross-platform."""
+"""Audio module for playing voice alert files cross-platform with loudness boost."""
 
 import os
 import sys
@@ -19,11 +19,31 @@ class AudioPlayer:
         self._lock = threading.Lock()
 
     def get_voice_path(self, voice_name: str) -> Optional[str]:
-        """Resolve voice name (e.g. 'Female', 'Male') to asset file path."""
-        filename = f"{voice_name.lower().strip()}.wav"
+        """Resolve voice name (e.g. 'English Female', 'Hindi Male', 'Female') to asset file path."""
+        v = voice_name.strip().lower()
+
+        if "hindi female" in v or ("hindi" in v and "female" in v):
+            filename = "female_hi.wav"
+        elif "hindi male" in v or ("hindi" in v and "male" in v):
+            filename = "male_hi.wav"
+        elif "punjabi female" in v or ("punjabi" in v and "female" in v):
+            filename = "female_pa.wav"
+        elif "punjabi male" in v or ("punjabi" in v and "male" in v):
+            filename = "male_pa.wav"
+        elif "english male" in v or ("male" in v and "female" not in v):
+            filename = "male.wav"
+        else:
+            filename = "female.wav"
+
         filepath = os.path.join(self._assets_dir, filename)
         if os.path.exists(filepath):
             return filepath
+
+        # Fallback check
+        fallback = os.path.join(self._assets_dir, f"{v}.wav")
+        if os.path.exists(fallback):
+            return fallback
+
         return None
 
     def stop(self) -> None:
@@ -43,47 +63,64 @@ class AudioPlayer:
                 except Exception:
                     pass
 
-    def play(self, voice_name: str) -> bool:
-        """Play the specified voice file asynchronously, stopping any ongoing playback."""
+    def play(self, voice_name: str, loudness_level: str = "Normal") -> bool:
+        """Play the specified voice file asynchronously with optional volume boost."""
         filepath = self.get_voice_path(voice_name)
         if not filepath:
-            print(f"Audio file for voice '{voice_name}' not found at {filepath}")
+            print(f"Audio file for voice '{voice_name}' not found at assets path.")
             return False
 
-        # Stop previous voice playback so two voices never play at the same time
+        # Stop previous voice playback so two voices never overlap
         self.stop()
 
-        thread = threading.Thread(target=self._play_file_sync, args=(filepath,), daemon=True)
+        thread = threading.Thread(
+            target=self._play_file_sync,
+            args=(filepath, loudness_level),
+            daemon=True
+        )
         thread.start()
         return True
 
-    def _play_file_sync(self, filepath: str) -> None:
+    def _play_file_sync(self, filepath: str, loudness_level: str = "Normal") -> None:
         """Synchronous file playback runner according to operating system."""
+        volume_factor = 1.0
+        lvl = loudness_level.lower()
+        if "150" in lvl or "high" in lvl:
+            volume_factor = 1.5
+        elif "200" in lvl or "max" in lvl:
+            volume_factor = 2.0
+
         try:
             if sys.platform == "darwin":
-                # macOS: built-in command line audio player afplay
+                # macOS: built-in afplay supports -v volume multiplier
+                cmd = ["afplay", "-v", str(volume_factor), filepath]
                 with self._lock:
-                    proc = subprocess.Popen(["afplay", filepath], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     self._current_process = proc
                 proc.wait()
                 with self._lock:
                     if self._current_process == proc:
                         self._current_process = None
+
             elif sys.platform == "win32":
                 import winsound
                 winsound.PlaySound(filepath, winsound.SND_FILENAME)
+
             else:
-                if subprocess.call(["which", "aplay"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0:
+                if subprocess.call(["which", "paplay"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0:
+                    # Linux PulseAudio paplay supports --volume (65536 = 100%)
+                    vol_int = int(65536 * volume_factor)
+                    cmd = ["paplay", "--volume", str(vol_int), filepath]
                     with self._lock:
-                        proc = subprocess.Popen(["aplay", filepath], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                         self._current_process = proc
                     proc.wait()
                     with self._lock:
                         if self._current_process == proc:
                             self._current_process = None
-                elif subprocess.call(["which", "paplay"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0:
+                else:
                     with self._lock:
-                        proc = subprocess.Popen(["paplay", filepath], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        proc = subprocess.Popen(["aplay", filepath], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                         self._current_process = proc
                     proc.wait()
                     with self._lock:

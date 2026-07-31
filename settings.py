@@ -8,17 +8,26 @@ from typing import Any, Dict, Optional, Callable
 
 DEFAULT_SETTINGS: Dict[str, Any] = {
     "battery_level": 100,
-    "voice": "Female",
+    "voice": "English Female",
+    "loudness": "Normal",
     "alert_type": "Voice + Notification",
-    "reminder": "Alert Once",
+    "reminder": "5 Minutes",
     "startup": False,
     "check_updates": True,
 }
 
-VALID_BATTERY_LEVELS = [80, 90, 95, 100]
-VALID_VOICES = ["Female", "Male"]
+VALID_BATTERY_LEVELS = [70, 75, 80, 85, 90, 95, 100]
+VALID_VOICES = [
+    "English Female",
+    "English Male",
+    "Hindi Female",
+    "Hindi Male",
+    "Punjabi Female",
+    "Punjabi Male",
+]
+VALID_LOUDNESS_LEVELS = ["Normal", "High", "Maximum"]
 VALID_ALERT_TYPES = ["Voice Only", "Notification Only", "Voice + Notification"]
-VALID_REMINDERS = ["Alert Once", "5 Minutes", "10 Minutes", "15 Minutes"]
+VALID_REMINDERS = ["Alert Once", "2 Minutes", "5 Minutes", "10 Minutes", "15 Minutes", "30 Minutes"]
 
 
 class SettingsManager:
@@ -51,22 +60,31 @@ class SettingsManager:
             try:
                 with open(self._config_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                
+
                 # Sanitize and validate loaded fields
                 self._settings = {
                     "battery_level": data.get("battery_level", DEFAULT_SETTINGS["battery_level"]),
                     "voice": data.get("voice", DEFAULT_SETTINGS["voice"]),
+                    "loudness": data.get("loudness", DEFAULT_SETTINGS["loudness"]),
                     "alert_type": data.get("alert_type", DEFAULT_SETTINGS["alert_type"]),
                     "reminder": data.get("reminder", DEFAULT_SETTINGS["reminder"]),
                     "startup": bool(data.get("startup", DEFAULT_SETTINGS["startup"])),
                     "check_updates": bool(data.get("check_updates", DEFAULT_SETTINGS["check_updates"])),
                 }
 
+                # Legacy voice mapping fallback
+                if self._settings["voice"] == "Female":
+                    self._settings["voice"] = "English Female"
+                elif self._settings["voice"] == "Male":
+                    self._settings["voice"] = "English Male"
+
                 # Validate ranges
                 if self._settings["battery_level"] not in VALID_BATTERY_LEVELS:
                     self._settings["battery_level"] = DEFAULT_SETTINGS["battery_level"]
                 if self._settings["voice"] not in VALID_VOICES:
                     self._settings["voice"] = DEFAULT_SETTINGS["voice"]
+                if self._settings["loudness"] not in VALID_LOUDNESS_LEVELS:
+                    self._settings["loudness"] = DEFAULT_SETTINGS["loudness"]
                 if self._settings["alert_type"] not in VALID_ALERT_TYPES:
                     self._settings["alert_type"] = DEFAULT_SETTINGS["alert_type"]
                 if self._settings["reminder"] not in VALID_REMINDERS:

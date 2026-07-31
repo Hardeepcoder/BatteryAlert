@@ -350,7 +350,8 @@ class BatteryAlertApp:
         self._was_plugged_in = is_plugged
 
         target_level = int(self._settings_manager.get("battery_level", 100))
-        voice = str(self._settings_manager.get("voice", "Female"))
+        voice = str(self._settings_manager.get("voice", "English Female"))
+        loudness = str(self._settings_manager.get("loudness", "Normal"))
         alert_type = str(self._settings_manager.get("alert_type", "Voice + Notification"))
         reminder_setting = str(self._settings_manager.get("reminder", "5 Minutes"))
 
@@ -363,7 +364,7 @@ class BatteryAlertApp:
         now = time.time()
 
         if self._alert_count == 0:
-            self._trigger_alert(alert_type, voice, target_level, percent)
+            self._trigger_alert(alert_type, voice, loudness, target_level, percent)
             self._alert_count += 1
             self._last_alert_time = now
             return
@@ -373,18 +374,22 @@ class BatteryAlertApp:
             return
 
         if (now - self._last_alert_time) >= reminder_seconds:
-            self._trigger_alert(alert_type, voice, target_level, percent, is_reminder=True)
+            self._trigger_alert(alert_type, voice, loudness, target_level, percent, is_reminder=True)
             self._alert_count += 1
             self._last_alert_time = now
 
     def _parse_reminder_seconds(self, reminder_str: str) -> Optional[int]:
         """Convert reminder setting string to seconds interval."""
-        if reminder_str == "5 Minutes":
+        if reminder_str == "2 Minutes":
+            return 120
+        elif reminder_str == "5 Minutes":
             return 300
         elif reminder_str == "10 Minutes":
             return 600
         elif reminder_str == "15 Minutes":
             return 900
+        elif reminder_str == "30 Minutes":
+            return 1800
         return None
 
     def _reset_alert_session(self) -> None:
@@ -392,7 +397,7 @@ class BatteryAlertApp:
         self._alert_count = 0
         self._last_alert_time = 0.0
 
-    def _trigger_alert(self, alert_type: str, voice: str, target_level: int, current_level: float, is_reminder: bool = False) -> None:
+    def _trigger_alert(self, alert_type: str, voice: str, loudness: str, target_level: int, current_level: float, is_reminder: bool = False) -> None:
         """Execute requested alert actions (Voice, Notification, or Both)."""
         title = "Battery Fully Charged" if target_level == 100 else f"Battery Reached {target_level}%"
         if is_reminder:
@@ -404,7 +409,7 @@ class BatteryAlertApp:
         send_notify = alert_type in ("Notification Only", "Voice + Notification")
 
         if play_voice:
-            voice_success = self._audio_player.play(voice)
+            voice_success = self._audio_player.play(voice, loudness)
             if not voice_success and not send_notify:
                 send_notify = True
 
