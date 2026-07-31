@@ -5,7 +5,35 @@ import sys
 import time
 import threading
 import webbrowser
+import socket
 from typing import Optional, Dict, Any
+
+if sys.platform == "darwin":
+    try:
+        from Foundation import NSObject
+        import objc
+
+        class MainThreadScheduler(NSObject):
+            @objc.signature(b'v@:@')
+            def execute_(self, func):
+                func()
+        _scheduler = MainThreadScheduler.alloc().init()
+    except Exception:
+        _scheduler = None
+else:
+    _scheduler = None
+
+
+def run_on_main_thread(func):
+    """Executes a function on the macOS AppKit main thread if on darwin, otherwise runs it directly."""
+    if sys.platform == "darwin" and _scheduler is not None:
+        _scheduler.performSelectorOnMainThread_withObject_waitUntilDone_(
+            "execute:",
+            func,
+            False
+        )
+    else:
+        func()
 
 try:
     import tkinter as tk
@@ -56,12 +84,55 @@ class BatteryAlertApp:
                 print(f"Tkinter root initialization failed: {e}")
                 self._root = None
 
+        self._lock_socket: Optional[socket.socket] = None
+
         self._settings_window_instance: Optional[SettingsWindow] = None
         self._tray: Optional[SystemTray] = None
         self._monitor_thread: Optional[threading.Thread] = None
 
+    def _check_single_instance(self) -> bool:
+        """Check if another instance is already running.
+        If running, notifies it via socket and returns False.
+        Otherwise, starts listening socket and returns True.
+        """
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind(('127.0.0.1', 49520))
+            s.listen(5)
+            self._lock_socket = s
+            
+            # Start background thread to listen for trigger messages from subsequent instances
+            def listener():
+                while self._is_running:
+                    try:
+                        conn, addr = s.accept()
+                        data = conn.recv(1024).decode('utf-8')
+                        if data == "SHOW_SETTINGS":
+                            run_on_main_thread(self._schedule_open_settings)
+                        conn.close()
+                    except Exception:
+                        break
+            
+            t = threading.Thread(target=listener, daemon=True)
+            t.start()
+            return True
+        except Exception:
+            # Port is already bound -> Another instance is running!
+            try:
+                # Notify the running instance to show its settings window
+                s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s2.connect(('127.0.0.1', 49520))
+                s2.sendall(b"SHOW_SETTINGS")
+                s2.close()
+            except Exception as e:
+                print(f"Failed to notify existing instance: {e}")
+            return False
+
     def start(self) -> None:
         """Start the background application."""
+        if not self._check_single_instance():
+            sys.exit(0)
+
         startup_enabled = self._settings_manager.get("startup", False)
         StartupManager.sync(startup_enabled)
 
@@ -77,6 +148,9 @@ class BatteryAlertApp:
             )
         except Exception as e:
             print(f"Failed to send startup notification: {e}")
+
+        # Automatically show settings dialogue box on startup
+        self._schedule_open_settings()
 
         # Run system tray menu
         self._tray = SystemTray(
