@@ -145,6 +145,7 @@ jobs:
           body: |
             ## 📥 Official Download Links
 
+            - 🤖 **Android Package**: [Download BatteryAlert-Android-v1.0.0.apk](https://github.com/Hardeepcoder/BatteryAlert/releases/download/${{ github.ref_name }}/BatteryAlert-Android-v1.0.0.apk)
             - 🪟 **Windows Setup Installer**: [Download BatteryAlertSetup.exe](https://github.com/Hardeepcoder/BatteryAlert/releases/download/${{ github.ref_name }}/BatteryAlertSetup.exe)
             - 🍎 **macOS Disk Image (Intel)**: [Download BatteryAlert-macOS-Intel.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/${{ github.ref_name }}/BatteryAlert-macOS-Intel.dmg)
             - 🍎 **macOS Disk Image (Apple Silicon)**: [Download BatteryAlert-macOS-AppleSilicon.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/${{ github.ref_name }}/BatteryAlert-macOS-AppleSilicon.dmg)
