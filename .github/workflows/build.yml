@@ -96,7 +96,10 @@ jobs:
 
       - name: Create DMG Disk Image
         run: |
-          hdiutil create -volname "BatteryAlert" -srcfolder "dist/BatteryAlert.app" -ov -format UDZO "dist/BatteryAlert-${{ matrix.dmg-suffix }}.dmg"
+          mkdir -p dist/dmg_root
+          cp -R dist/BatteryAlert.app dist/dmg_root/
+          ln -s /Applications dist/dmg_root/Applications
+          hdiutil create -volname "Battery Alert" -srcfolder "dist/dmg_root" -ov -format UDZO "dist/BatteryAlert-${{ matrix.dmg-suffix }}.dmg"
 
       - name: Upload macOS Asset
         uses: actions/upload-artifact@v4

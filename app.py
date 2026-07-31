@@ -29,8 +29,17 @@ if sys.platform == "darwin":
                     run_on_main_thread(AppDelegate.reopen_callback)
                 return True
 
+            @objc.signature(b'v@:@')
+            def applicationDidFinishLaunching_(self, notification):
+                if AppDelegate.reopen_callback:
+                    run_on_main_thread(AppDelegate.reopen_callback)
+
+            @objc.signature(b'v@:@')
+            def applicationDidBecomeActive_(self, notification):
+                if AppDelegate.reopen_callback:
+                    run_on_main_thread(AppDelegate.reopen_callback)
+
         _app_delegate = AppDelegate.alloc().init()
-        AppKit.NSApp.setDelegate_(_app_delegate)
     except Exception as e:
         print(f"AppKit setup error: {e}")
         _scheduler = None
@@ -149,6 +158,14 @@ class BatteryAlertApp:
 
     def start(self) -> None:
         """Start the background application."""
+        if sys.platform == "darwin" and '_app_delegate' in globals() and _app_delegate is not None:
+            AppDelegate.reopen_callback = self._schedule_open_settings
+            try:
+                ns_app = AppKit.NSApplication.sharedApplication()
+                ns_app.setDelegate_(_app_delegate)
+            except Exception as e:
+                print(f"NSApplication delegate setup error: {e}")
+
         if not self._check_single_instance():
             sys.exit(0)
 
