@@ -41,10 +41,10 @@ Download pre-compiled installers directly from our official [GitHub Releases](ht
 
 | Platform | Recommended Package | Direct Download Link |
 | :--- | :--- | :--- |
-| 🤖 **Android** | APK Package (Android 8.0+) | [📥 Download BatteryAlert-Android-v1.0.0.apk](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.3.0/BatteryAlert-Android-v1.0.0.apk) |
-| 🪟 **Windows** | Setup Installer (`.exe`) | [📥 Download BatteryAlertSetup.exe](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.3.0/BatteryAlertSetup.exe) |
-| 🍏 **macOS (Apple Silicon)** | M1/M2/M3/M4 Disk Image | [📥 Download BatteryAlert-macOS-AppleSilicon.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.3.0/BatteryAlert-macOS-AppleSilicon.dmg) |
-| 🍏 **macOS (Intel)** | Intel Mac Disk Image | [📥 Download BatteryAlert-macOS-Intel.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.3.0/BatteryAlert-macOS-Intel.dmg) |
+| 🤖 **Android** | APK Package (Android 8.0+) | [📥 Download BatteryAlert-Android-v1.0.0.apk](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.4.0/BatteryAlert-Android-v1.0.0.apk) |
+| 🪟 **Windows** | Setup Installer (`.exe`) | [📥 Download BatteryAlertSetup.exe](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.4.0/BatteryAlertSetup.exe) |
+| 🍏 **macOS (Apple Silicon)** | M1/M2/M3/M4 Disk Image | [📥 Download BatteryAlert-macOS-AppleSilicon.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.4.0/BatteryAlert-macOS-AppleSilicon.dmg) |
+| 🍏 **macOS (Intel)** | Intel Mac Disk Image | [📥 Download BatteryAlert-macOS-Intel.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.4.0/BatteryAlert-macOS-Intel.dmg) |
 
 ---
 
