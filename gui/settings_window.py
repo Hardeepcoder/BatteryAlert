@@ -25,25 +25,68 @@ if sys.platform == "darwin":
         import objc
         HAS_APPKIT = True
 
-        class VoiceTestTarget(NSObject):
-            def initWithPlayer_voicePop_loudnessPop_(self, player, voice_pop, loudness_pop):
-                self = objc.super(VoiceTestTarget, self).init()
+        class MacSettingsPanel(NSObject):
+            """Native Cocoa NSPanel for macOS settings without NSAlert modal closure issues."""
+
+            def initWithManager_player_callback_(self, settings_manager, audio_player, on_save_callback):
+                self = objc.super(MacSettingsPanel, self).init()
                 if self is not None:
-                    self.player = player
-                    self.voice_pop = voice_pop
-                    self.loudness_pop = loudness_pop
+                    self.settings_manager = settings_manager
+                    self.audio_player = audio_player
+                    self.on_save_callback = on_save_callback
+                    self.panel = None
                 return self
 
             @objc.signature(b'v@:@')
             def testVoice_(self, sender):
                 try:
-                    v_name = str(self.voice_pop.titleOfSelectedItem())
-                    v_loud = str(self.loudness_pop.titleOfSelectedItem())
-                    self.player.play(v_name, v_loud)
+                    v_name = str(self.pop_voice.titleOfSelectedItem())
+                    v_loud = str(self.pop_loudness.titleOfSelectedItem())
+                    self.audio_player.play(v_name, v_loud)
                 except Exception as e:
-                    print(f"Test voice playback error: {e}")
+                    print(f"Test voice error: {e}")
 
-    except Exception:
+            @objc.signature(b'v@:@')
+            def saveSettings_(self, sender):
+                try:
+                    raw_bat = str(self.pop_battery.titleOfSelectedItem()).replace("%", "").strip()
+                    bat = int(raw_bat)
+                    voice = str(self.pop_voice.titleOfSelectedItem())
+                    loudness = str(self.pop_loudness.titleOfSelectedItem())
+                    alert_type = str(self.pop_alert_type.titleOfSelectedItem())
+                    reminder = str(self.pop_reminder.titleOfSelectedItem())
+                    startup = (self.chk_startup.state() == AppKit.NSControlStateValueOn)
+
+                    new_config = {
+                        "battery_level": bat,
+                        "voice": voice,
+                        "loudness": loudness,
+                        "alert_type": alert_type,
+                        "reminder": reminder,
+                        "startup": startup,
+                    }
+                    self.settings_manager.save(new_config)
+                    StartupManager.sync(startup)
+
+                    if self.on_save_callback:
+                        self.on_save_callback()
+
+                    if self.panel:
+                        self.panel.close()
+                except Exception as e:
+                    print(f"Save settings error: {e}")
+
+            @objc.signature(b'v@:@')
+            def cancelSettings_(self, sender):
+                if self.panel:
+                    self.panel.close()
+
+            @objc.signature(b'v@:@')
+            def openWebsite_(self, sender):
+                webbrowser.open("https://codingsart.com")
+
+    except Exception as e:
+        print(f"AppKit initialization error: {e}")
         HAS_APPKIT = False
 
 # Try Tkinter for Windows UI
@@ -58,128 +101,151 @@ except ImportError:
     messagebox = None
 
 
+_active_mac_panel_controller = None
+
+
 def show_mac_native_settings(settings_manager: SettingsManager, on_save_callback: Optional[Callable[[], None]] = None) -> None:
-    """Display native macOS AppKit Cocoa settings popup dialog."""
+    """Display native macOS AppKit Cocoa settings window."""
+    global _active_mac_panel_controller
+
     if not HAS_APPKIT:
         return
+
+    # If window is already open, bring it to front
+    if _active_mac_panel_controller and _active_mac_panel_controller.panel:
+        try:
+            _active_mac_panel_controller.panel.makeKeyAndOrderFront_(None)
+            AppKit.NSApp.activateIgnoringOtherApps_(True)
+            return
+        except Exception:
+            _active_mac_panel_controller = None
 
     audio_player = AudioPlayer()
     current = settings_manager.get_all()
 
-    alert = AppKit.NSAlert.alloc().init()
-    alert.setMessageText_("Battery Alert Settings")
-    alert.setInformativeText_(
-        "A Lightweight utility for Apple mac\n\n"
-        "Developed by: Coding's Art - HardeepCoder\n"
-        "Website: https://codingsart.com"
+    controller = MacSettingsPanel.alloc().initWithManager_player_callback_(
+        settings_manager, audio_player, on_save_callback
     )
+    _active_mac_panel_controller = controller
 
-    accessory = AppKit.NSView.alloc().initWithFrame_(AppKit.NSMakeRect(0, 0, 340, 260))
+    style = AppKit.NSWindowStyleMaskTitled | AppKit.NSWindowStyleMaskClosable
+    rect = AppKit.NSMakeRect(0, 0, 360, 340)
+    panel = AppKit.NSPanel.alloc().initWithContentRect_styleMask_backing_defer_(
+        rect, style, AppKit.NSBackingStoreBuffered, False
+    )
+    panel.setTitle_("Battery Alert Settings")
+    panel.setFloatingPanel_(True)
+    panel.setBecomesKeyOnlyIfNeeded_(False)
+    panel.setHidesOnDeactivate_(False)
+
+    controller.panel = panel
+
+    content_view = panel.contentView()
+
+    # Title label
+    lbl_title = AppKit.NSTextField.labelWithString_("Battery Alert Settings")
+    lbl_title.setFrame_(AppKit.NSMakeRect(20, 295, 320, 24))
+    lbl_title.setFont_(AppKit.NSFont.boldSystemFontOfSize_(15))
+
+    lbl_sub = AppKit.NSTextField.labelWithString_("Coding's Art - HardeepCoder")
+    lbl_sub.setFrame_(AppKit.NSMakeRect(20, 275, 320, 18))
+    lbl_sub.setFont_(AppKit.NSFont.systemFontOfSize_weight_(11, AppKit.NSFontWeightLight))
 
     # 1. Battery Alert Level
     lbl1 = AppKit.NSTextField.labelWithString_("Battery Alert Level:")
-    lbl1.setFrame_(AppKit.NSMakeRect(0, 220, 140, 24))
-    pop1 = AppKit.NSPopUpButton.alloc().initWithFrame_pullsDown_(AppKit.NSMakeRect(150, 218, 180, 26), False)
+    lbl1.setFrame_(AppKit.NSMakeRect(20, 230, 140, 24))
+    pop1 = AppKit.NSPopUpButton.alloc().initWithFrame_pullsDown_(AppKit.NSMakeRect(160, 228, 180, 26), False)
     pop1.addItemsWithTitles_([f"{v}%" for v in VALID_BATTERY_LEVELS])
     pop1.selectItemWithTitle_(f"{current.get('battery_level', 100)}%")
+    controller.pop_battery = pop1
 
     # 2. Voice Selection (6 Voices)
     lbl2 = AppKit.NSTextField.labelWithString_("Alert Voice Pack:")
-    lbl2.setFrame_(AppKit.NSMakeRect(0, 180, 140, 24))
-    pop2 = AppKit.NSPopUpButton.alloc().initWithFrame_pullsDown_(AppKit.NSMakeRect(150, 178, 180, 26), False)
+    lbl2.setFrame_(AppKit.NSMakeRect(20, 190, 140, 24))
+    pop2 = AppKit.NSPopUpButton.alloc().initWithFrame_pullsDown_(AppKit.NSMakeRect(160, 188, 180, 26), False)
     pop2.addItemsWithTitles_(VALID_VOICES)
     pop2.selectItemWithTitle_(current.get("voice", "English Female"))
+    controller.pop_voice = pop2
 
     # 3. Alert Loudness
     lbl3_v = AppKit.NSTextField.labelWithString_("Alert Loudness:")
-    lbl3_v.setFrame_(AppKit.NSMakeRect(0, 140, 140, 24))
-    pop3_v = AppKit.NSPopUpButton.alloc().initWithFrame_pullsDown_(AppKit.NSMakeRect(150, 138, 180, 26), False)
+    lbl3_v.setFrame_(AppKit.NSMakeRect(20, 150, 140, 24))
+    pop3_v = AppKit.NSPopUpButton.alloc().initWithFrame_pullsDown_(AppKit.NSMakeRect(160, 148, 180, 26), False)
     pop3_v.addItemsWithTitles_(VALID_LOUDNESS_LEVELS)
     pop3_v.selectItemWithTitle_(current.get("loudness", "Normal"))
+    controller.pop_loudness = pop3_v
 
     # 4. Alert Type
     lbl3 = AppKit.NSTextField.labelWithString_("Alert Type:")
-    lbl3.setFrame_(AppKit.NSMakeRect(0, 100, 140, 24))
-    pop3 = AppKit.NSPopUpButton.alloc().initWithFrame_pullsDown_(AppKit.NSMakeRect(150, 98, 180, 26), False)
+    lbl3.setFrame_(AppKit.NSMakeRect(20, 110, 140, 24))
+    pop3 = AppKit.NSPopUpButton.alloc().initWithFrame_pullsDown_(AppKit.NSMakeRect(160, 108, 180, 26), False)
     pop3.addItemsWithTitles_(VALID_ALERT_TYPES)
     pop3.selectItemWithTitle_(current.get("alert_type", "Voice + Notification"))
+    controller.pop_alert_type = pop3
 
     # 5. Reminder Frequency
     lbl4 = AppKit.NSTextField.labelWithString_("Reminder Interval:")
-    lbl4.setFrame_(AppKit.NSMakeRect(0, 60, 140, 24))
-    pop4 = AppKit.NSPopUpButton.alloc().initWithFrame_pullsDown_(AppKit.NSMakeRect(150, 58, 180, 26), False)
+    lbl4.setFrame_(AppKit.NSMakeRect(20, 70, 140, 24))
+    pop4 = AppKit.NSPopUpButton.alloc().initWithFrame_pullsDown_(AppKit.NSMakeRect(160, 68, 180, 26), False)
     pop4.addItemsWithTitles_(VALID_REMINDERS)
     pop4.selectItemWithTitle_(current.get("reminder", "5 Minutes"))
+    controller.pop_reminder = pop4
 
     # 6. Launch on Startup
-    chk5 = AppKit.NSButton.alloc().initWithFrame_(AppKit.NSMakeRect(0, 15, 180, 24))
+    chk5 = AppKit.NSButton.alloc().initWithFrame_(AppKit.NSMakeRect(20, 35, 160, 24))
     chk5.setButtonType_(AppKit.NSButtonTypeSwitch)
     chk5.setTitle_("Launch on Startup")
     chk5.setState_(AppKit.NSControlStateValueOn if current.get("startup", False) else AppKit.NSControlStateValueOff)
+    controller.chk_startup = chk5
 
     # 7. Test Voice Button
-    btn_test = AppKit.NSButton.alloc().initWithFrame_(AppKit.NSMakeRect(190, 12, 140, 28))
+    btn_test = AppKit.NSButton.alloc().initWithFrame_(AppKit.NSMakeRect(180, 32, 160, 28))
     btn_test.setTitle_("▶ Test Voice")
     btn_test.setBezelStyle_(AppKit.NSBezelStyleRounded)
-
-    target_handler = VoiceTestTarget.alloc().initWithPlayer_voicePop_loudnessPop_(audio_player, pop2, pop3_v)
-    btn_test.setTarget_(target_handler)
+    btn_test.setTarget_(controller)
     btn_test.setAction_("testVoice:")
-    alert._test_target_handler = target_handler
 
-    accessory.addSubview_(lbl1)
-    accessory.addSubview_(pop1)
-    accessory.addSubview_(lbl2)
-    accessory.addSubview_(pop2)
-    accessory.addSubview_(lbl3_v)
-    accessory.addSubview_(pop3_v)
-    accessory.addSubview_(lbl3)
-    accessory.addSubview_(pop3)
-    accessory.addSubview_(lbl4)
-    accessory.addSubview_(pop4)
-    accessory.addSubview_(chk5)
-    accessory.addSubview_(btn_test)
+    # 8. Bottom Buttons (Save / Cancel)
+    btn_cancel = AppKit.NSButton.alloc().initWithFrame_(AppKit.NSMakeRect(170, 5, 80, 26))
+    btn_cancel.setTitle_("Cancel")
+    btn_cancel.setBezelStyle_(AppKit.NSBezelStyleRounded)
+    btn_cancel.setTarget_(controller)
+    btn_cancel.setAction_("cancelSettings:")
 
-    alert.setAccessoryView_(accessory)
-    alert.addButtonWithTitle_("Save Settings")
-    alert.addButtonWithTitle_("Cancel")
-    alert.addButtonWithTitle_("🌐 codingsart.com")
+    btn_save = AppKit.NSButton.alloc().initWithFrame_(AppKit.NSMakeRect(255, 5, 85, 26))
+    btn_save.setTitle_("Save")
+    btn_save.setBezelStyle_(AppKit.NSBezelStyleRounded)
+    btn_save.setTarget_(controller)
+    btn_save.setAction_("saveSettings:")
 
-    win = alert.window()
-    if win:
-        try:
-            win.setLevel_(AppKit.NSModalPanelWindowLevel)
-            win.center()
-            win.makeKeyAndOrderFront_(None)
-        except Exception:
-            pass
+    btn_web = AppKit.NSButton.alloc().initWithFrame_(AppKit.NSMakeRect(20, 5, 140, 26))
+    btn_web.setTitle_("🌐 codingsart.com")
+    btn_web.setBezelStyle_(AppKit.NSBezelStyleRounded)
+    btn_web.setTarget_(controller)
+    btn_web.setAction_("openWebsite:")
 
+    content_view.addSubview_(lbl_title)
+    content_view.addSubview_(lbl_sub)
+    content_view.addSubview_(lbl1)
+    content_view.addSubview_(pop1)
+    content_view.addSubview_(lbl2)
+    content_view.addSubview_(pop2)
+    content_view.addSubview_(lbl3_v)
+    content_view.addSubview_(pop3_v)
+    content_view.addSubview_(lbl3)
+    content_view.addSubview_(pop3)
+    content_view.addSubview_(lbl4)
+    content_view.addSubview_(pop4)
+    content_view.addSubview_(chk5)
+    content_view.addSubview_(btn_test)
+    content_view.addSubview_(btn_web)
+    content_view.addSubview_(btn_cancel)
+    content_view.addSubview_(btn_save)
+
+    panel.setLevel_(AppKit.NSFloatingWindowLevel)
+    panel.center()
+    panel.makeKeyAndOrderFront_(None)
     AppKit.NSApp.activateIgnoringOtherApps_(True)
-    res = alert.runModal()
-
-    if res == AppKit.NSAlertFirstButtonReturn:
-        selected_bat = int(pop1.titleOfSelectedItem().replace("%", "").strip())
-        selected_voice = pop2.titleOfSelectedItem()
-        selected_loudness = pop3_v.titleOfSelectedItem()
-        selected_type = pop3.titleOfSelectedItem()
-        selected_rem = pop4.titleOfSelectedItem()
-        selected_start = (chk5.state() == AppKit.NSControlStateValueOn)
-
-        new_config = {
-            "battery_level": selected_bat,
-            "voice": selected_voice,
-            "loudness": selected_loudness,
-            "alert_type": selected_type,
-            "reminder": selected_rem,
-            "startup": selected_start,
-        }
-        settings_manager.save(new_config)
-        StartupManager.sync(selected_start)
-        if on_save_callback:
-            on_save_callback()
-
-    elif res == AppKit.NSAlertThirdButtonReturn:
-        webbrowser.open("https://codingsart.com")
 
 
 class SettingsWindow:
@@ -362,6 +428,7 @@ class SettingsWindow:
         x = (ws // 2) - (w // 2)
         y = (hs // 2) - (h // 2)
         window.geometry(f"+{x}+{y}")
+        window.attributes('-topmost', True)
         window.lift()
         window.focus_force()
 
