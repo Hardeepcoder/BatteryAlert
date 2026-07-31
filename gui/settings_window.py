@@ -128,6 +128,15 @@ def show_mac_native_settings(settings_manager: SettingsManager, on_save_callback
     alert.addButtonWithTitle_("Cancel")
     alert.addButtonWithTitle_("🌐 codingsart.com")
 
+    win = alert.window()
+    if win:
+        try:
+            win.setLevel_(AppKit.NSModalPanelWindowLevel)
+            win.center()
+            win.makeKeyAndOrderFront_(None)
+        except Exception:
+            pass
+
     AppKit.NSApp.activateIgnoringOtherApps_(True)
     res = alert.runModal()
 

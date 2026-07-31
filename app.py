@@ -10,6 +10,7 @@ from typing import Optional, Dict, Any
 
 if sys.platform == "darwin":
     try:
+        import AppKit
         from Foundation import NSObject
         import objc
 
@@ -18,10 +19,25 @@ if sys.platform == "darwin":
             def execute_(self, func):
                 func()
         _scheduler = MainThreadScheduler.alloc().init()
-    except Exception:
+
+        class AppDelegate(NSObject):
+            reopen_callback = None
+
+            @objc.signature(b'B@:@B')
+            def applicationShouldHandleReopen_hasVisibleWindows_(self, sender, flag):
+                if AppDelegate.reopen_callback:
+                    run_on_main_thread(AppDelegate.reopen_callback)
+                return True
+
+        _app_delegate = AppDelegate.alloc().init()
+        AppKit.NSApp.setDelegate_(_app_delegate)
+    except Exception as e:
+        print(f"AppKit setup error: {e}")
         _scheduler = None
+        _app_delegate = None
 else:
     _scheduler = None
+    _app_delegate = None
 
 
 def run_on_main_thread(func):
@@ -89,6 +105,9 @@ class BatteryAlertApp:
         self._settings_window_instance: Optional[SettingsWindow] = None
         self._tray: Optional[SystemTray] = None
         self._monitor_thread: Optional[threading.Thread] = None
+
+        if sys.platform == "darwin" and '_app_delegate' in globals() and _app_delegate is not None:
+            AppDelegate.reopen_callback = self._schedule_open_settings
 
     def _check_single_instance(self) -> bool:
         """Check if another instance is already running.
@@ -226,6 +245,16 @@ class BatteryAlertApp:
                 )
                 alert.addButtonWithTitle_("OK")
                 alert.addButtonWithTitle_("🌐 codingsart.com")
+
+                win = alert.window()
+                if win:
+                    try:
+                        win.setLevel_(AppKit.NSModalPanelWindowLevel)
+                        win.center()
+                        win.makeKeyAndOrderFront_(None)
+                    except Exception:
+                        pass
+
                 AppKit.NSApp.activateIgnoringOtherApps_(True)
                 res = alert.runModal()
                 if res == AppKit.NSAlertSecondButtonReturn:
