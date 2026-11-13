@@ -1,183 +1,185 @@
 # Battery Alert 🔋
 
+[![Continuous Integration](https://github.com/Hardeepcoder/BatteryAlert/actions/workflows/ci.yml/badge.svg)](https://github.com/Hardeepcoder/BatteryAlert/actions/workflows/ci.yml)
 [![Build & Release](https://github.com/Hardeepcoder/BatteryAlert/actions/workflows/build.yml/badge.svg)](https://github.com/Hardeepcoder/BatteryAlert/actions/workflows/build.yml)
 [![Latest Release](https://img.shields.io/github/v/release/Hardeepcoder/BatteryAlert?style=flat-square&color=10b981)](https://github.com/Hardeepcoder/BatteryAlert/releases/latest)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python Version](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue?style=flat-square)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+[![Zero Telemetry](https://img.shields.io/badge/telemetry-0%25%20(100%25%20offline)-success?style=flat-square)](SECURITY.md)
 
-A lightweight, production-ready cross-platform background utility for **Windows** and **macOS**. 
+An open-source, production-ready, cross-platform background battery telemetry utility for **Windows**, **macOS**, and **Android**. 
 
-Battery Alert monitors your laptop's battery charging telemetry in real-time. When your battery reaches a configurable charge level while plugged in, it alerts you using **native operating system notifications** and **voice alerts** so you can unplug your charger and preserve battery health.
+Battery Alert continuously monitors battery telemetry in real-time. When your device reaches a designated charging limit (such as 80% or 90%) while plugged in, it delivers **native operating system notifications** and **multilingual voice alerts** (English, Hindi, Punjabi) so you can unplug your charger, prevent thermal buildup, and significantly extend lithium-ion battery lifespan.
 
 ---
 
-## 📸 Screenshots
+## 🎯 Why Battery Alert?
 
-*(Screenshots placeholder)*
+Modern lithium-ion laptop and smartphone batteries experience maximum electrochemical stress when held at **100% state of charge (SoC)** while plugged into continuous wall power. Academic battery research demonstrates that limiting charging cycles to **80%–90%** can double or triple long-term battery cell health and usable cycle count.
+
+Battery Alert operates with a **zero-telemetry, local-first philosophy**:
+- **0% Background CPU**: Event-driven polling avoids draining the battery while monitoring it.
+- **100% Offline**: No network tracking, no account registration, no analytics.
+- **Multilingual Native Audio**: Human voice alerts recorded in English, Hindi (हिंदी), and Punjabi (ਪੰਜਾਬੀ).
+
+---
+
+## 🏗️ System Architecture
 
 ```text
-+-------------------------------------------------------------+
-|                     BATTERY ALERT                           |
-|  [Menu Bar / System Tray Icon] -> [Native Settings Modal]   |
-+-------------------------------------------------------------+
++-----------------------------------------------------------------------+
+|                         BATTERY ALERT ENGINE                          |
++-----------------------------------------------------------------------+
+                                  |
+               [Hardware Telemetry Polling (psutil)]
+                                  |
+                                  v
+                    +---------------------------+
+                    | BatteryStatus Telemetry   |
+                    | - percent: float          |
+                    | - power_plugged: bool     |
+                    | - is_charging: bool       |
+                    +---------------------------+
+                                  |
+            [Threshold & Repeating Interval Evaluation]
+                                  |
+                                  v
+        +-----------------------------------------------+
+        |               ALERT DISPATCHER                |
+        +-----------------------------------------------+
+               /                                 \
+              v                                   v
++-----------------------------+     +-----------------------------+
+|    Native OS Notification   |     |    Subprocess Audio Engine  |
+| - macOS: AppKit NSPanel     |     | - Loudness Enhancer Boost   |
+| - Windows: Win32 Tray Popup |     | - Multilingual WAV Assets   |
++-----------------------------+     +-----------------------------+
 ```
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- 🤫 **Silent Background Operation**: Runs quietly in the macOS menu bar or Windows system tray.
-- 🎯 **Configurable Alert Levels**: Set alerts at **80%**, **90%**, **95%**, or **100%**.
-- 🗣️ **Voice Selection**: Choose between **Female** and **Male** voice alerts.
-- 🔔 **Alert Types**: Support for **Voice + Notification**, **Voice Only**, or **Notification Only**.
-- ⏱️ **Smart Reminders**: Optional reminder intervals (**Alert Once**, **5 Minutes**, **10 Minutes**, **15 Minutes**) — up to 3 alerts max per charging session.
-- 🚀 **Launch on Startup**: Option to automatically start on system boot.
-- ⚡ **Ultra-Low Resource Footprint**: Built with Python standard library and lightweight hooks — uses near 0% CPU and minimal RAM.
+- 🤫 **Silent Tray / Menu Bar Operation**: Runs quietly in the macOS menu bar or Windows system tray with zero desktop clutter.
+- 🎯 **Configurable Alert Thresholds**: Trigger alerts at **70%**, **75%**, **80%**, **85%**, **90%**, **95%**, or **100%**.
+- 🗣️ **Multilingual Voice Selection**:
+  - **English** (Female / Male)
+  - **Hindi (हिंदी)** (Female / Male)
+  - **Punjabi (ਪੰਜਾਬੀ)** (Female / Male)
+- 🔊 **Three-Stage Loudness Booster**: Normal, High, and Maximum audio amplification to guarantee you hear alerts even in busy office or home environments.
+- ⏱️ **Smart Anti-Spam Reminders**: Configurable repeat intervals (**Alert Once**, **2 Min**, **5 Min**, **10 Min**, **15 Min**, **30 Min**) capped at 3 alerts per charging session.
+- 🚀 **Auto-Launch on Startup**: Native macOS `LaunchAgent` and Windows Registry startup hook.
+- 🛡️ **Subprocess Isolation**: Audio playback and notifications run in detached worker threads to prevent UI freezes.
 
 ---
 
-## 📥 Official Download Links
+## 📥 Official Downloads & Ecosystem
 
-Download pre-compiled installers directly from our official [GitHub Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
+Download pre-compiled packages directly from [GitHub Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
 
-| Platform | Recommended Package | Direct Download Link |
+| Platform | Format / Type | Direct Download Link |
 | :--- | :--- | :--- |
-| 🤖 **Android** | APK Package (Android 8.0+) | [📥 Download BatteryAlert-Android-v1.0.0.apk](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.4.0/BatteryAlert-Android-v1.0.0.apk) |
-| 🪟 **Windows** | Setup Installer (`.exe`) | [📥 Download BatteryAlertSetup.exe](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.4.0/BatteryAlertSetup.exe) |
-| 🍏 **macOS (Apple Silicon)** | M1/M2/M3/M4 Disk Image | [📥 Download BatteryAlert-macOS-AppleSilicon.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.4.0/BatteryAlert-macOS-AppleSilicon.dmg) |
-| 🍏 **macOS (Intel)** | Intel Mac Disk Image | [📥 Download BatteryAlert-macOS-Intel.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/download/v1.4.0/BatteryAlert-macOS-Intel.dmg) |
+| 🍏 **macOS (Apple Silicon)** | M1/M2/M3/M4 Disk Image | [📥 Download BatteryAlert-macOS-AppleSilicon.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/latest) |
+| 🍏 **macOS (Intel)** | Intel x86_64 Disk Image | [📥 Download BatteryAlert-macOS-Intel.dmg](https://github.com/Hardeepcoder/BatteryAlert/releases/latest) |
+| 🪟 **Windows** | Setup Installer (`.exe`) | [📥 Download BatteryAlertSetup.exe](https://github.com/Hardeepcoder/BatteryAlert/releases/latest) |
+| 🤖 **Android Companion** | APK Package (Android 8.0+) | [📥 Download BatteryAlert-Android-v1.0.0.apk](https://github.com/Hardeepcoder/BatteryAlert/releases/latest) |
 
 ---
 
-## 📦 Supported Platforms
+## 💻 Local Development & Build Guide
 
-### 🤖 Android
-- **Supported OS**: Android 8.0 (Oreo) and newer (Android 9, 10, 11, 12, 13, 14, 15)
-- **Features**: Automatic charging detection foreground service, `LoudnessEnhancer` audio boost (+150% / +200%), multilingual voice alerts (English, Hindi, Punjabi), dynamic Light/Dark theme toggle.
-
-### 🪟 Windows Setup (Recommended)
-1. Download **`BatteryAlertSetup.exe`** from [Releases](https://github.com/Hardeepcoder/BatteryAlert/releases/latest).
-2. Double-click `BatteryAlertSetup.exe` to run the professional setup wizard.
-3. The installer automatically sets up:
-   - Installation to `Program Files\Battery Charge Alert`
-   - Start Menu and Desktop shortcuts
-   - Clean Add/Remove Programs integration & Uninstaller
-4. Look for the battery icon in your Windows System Tray (near the clock).
-
-#### 🛒 Microsoft Store & Silent Installation Switches
-`BatteryAlertSetup.exe` supports fully silent, non-interactive installation suitable for **Microsoft Store EXE submission** and enterprise deployment:
-- **Silent Install Command**:
-  ```cmd
-  BatteryAlertSetup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
-  ```
-- **Silent Uninstall Command**:
-  ```cmd
-  "{uninstaller_path}" /VERYSILENT /NORESTART
-  ```
-- **Installer Return Codes**:
-  - `0`: Success (Installation completed successfully)
-  - `1`: Cancelled (User cancelled the installation or clicked Cancel)
-  - `2`: Reboot required (Installation succeeded but requires a system reboot)
-  - `3`: Installation in progress (Another instance of setup is already running)
-
-### 🍎 macOS Setup
-We provide separate optimized packages for each macOS architecture:
-- **For Intel-based Macs**: Download **`BatteryAlert-macOS-Intel.dmg`**
-- **For Apple Silicon Macs (M1/M2/M3/M4)**: Download **`BatteryAlert-macOS-AppleSilicon.dmg`**
-
-1. Open the downloaded `.dmg` file.
-2. Drag `BatteryAlert.app` into your **Applications** folder.
-3. **First Launch (macOS Security Bypass)**:
-   - In Finder, open **Applications** ➔ **Right-Click** (or `Control + Click`) on **BatteryAlert.app** and select **Open**.
-   - Click **Open** on the prompt. (Or run `xattr -cr /Applications/BatteryAlert.app` in Terminal).
-
----
-
-## 💻 Building from Source
-
-### Requirements
-- Python 3.9+
+### Prerequisites
+- Python 3.9, 3.10, 3.11, or 3.12
 - macOS 11+ or Windows 10/11
-- Inno Setup 6 (for Windows `.exe` installer compilation)
+- Inno Setup 6 (optional, for compiling Windows `.exe` installer)
 
-### Setup Steps
+### Quickstart Setup
 ```bash
-# 1. Clone the repository
+# 1. Clone repository
 git clone https://github.com/Hardeepcoder/BatteryAlert.git
 cd BatteryAlert
 
-# 2. Install dependencies
+# 2. Create isolated virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
 
-# 3. Run application locally
-python app.py
+# 4. Run test suite
+python3 -m unittest discover tests -v
+
+# 5. Launch application
+python3 app.py
 ```
 
-### Packaging Executables & Installers
+### Building Binaries
 
-- **Windows Setup Installer (`BatteryAlertSetup.exe`)**:
-  ```cmd
-  pyinstaller --noconfirm --onedir --windowed --name "BatteryAlert" --icon "icon/app.ico" --add-data "assets;assets" --add-data "config;config" --add-data "icon;icon" app.py
-  iscc installer.iss
-  ```
+#### 🪟 Windows Setup Installer
+```cmd
+pyinstaller --noconfirm --onedir --windowed --name "BatteryAlert" ^
+  --icon "icon/app.ico" ^
+  --add-data "assets;assets" ^
+  --add-data "config;config" ^
+  --add-data "icon;icon" ^
+  app.py
 
-- **macOS Disk Image (`BatteryAlert-macOS-Intel.dmg` or `BatteryAlert-macOS-AppleSilicon.dmg`)**:
-  ```bash
-  pyinstaller --noconfirm --onedir --windowed --name "BatteryAlert" --icon "icon/app.icns" --add-data "assets:assets" --add-data "config:config" --add-data "icon:icon" --hidden-import "AppKit" --hidden-import "objc" app.py
-  hdiutil create -volname "BatteryAlert" -srcfolder "dist/BatteryAlert.app" -ov -format UDZO "dist/BatteryAlert-<suffix>.dmg"
-  ```
+iscc installer.iss
+```
+
+#### 🍏 macOS DMG (Apple Silicon & Intel)
+```bash
+pyinstaller --noconfirm --onedir --windowed --name "BatteryAlert" \
+  --icon "icon/app.icns" \
+  --add-data "assets:assets" \
+  --add-data "config:config" \
+  --add-data "icon:icon" \
+  --hidden-import "AppKit" \
+  --hidden-import "objc" \
+  app.py
+
+hdiutil create -volname "BatteryAlert" -srcfolder "dist/BatteryAlert.app" -ov -format UDZO "dist/BatteryAlert-macOS.dmg"
+```
 
 ---
 
-## 🚀 Release Process & GitHub Actions
+## 🧪 Testing & Continuous Integration
 
-The repository has an automated CI/CD pipeline configured with GitHub Actions:
-- **Trigger**: Every time a git tag starting with `v` (e.g. `v1.1.0`) is pushed to the repository.
-- **Workflow Steps**:
-  1. Runs `build-windows` on `windows-latest` to compile `BatteryAlertSetup.exe`.
-  2. Runs `build-macos` on `macos-15-intel` to build the Intel image `BatteryAlert-macOS-Intel.dmg`.
-  3. Runs `build-macos` on `macos-latest` (Apple Silicon runner) to build `BatteryAlert-macOS-AppleSilicon.dmg`.
-  4. Runs `release` on `ubuntu-latest` to download all three built assets, calculate their SHA-256 checksums, and publish them to a new GitHub Release with the checksum details appended to the release description.
+Battery Alert runs automated matrix testing across **Ubuntu, macOS, and Windows** across Python 3.9–3.12 on every push and pull request via [GitHub Actions](.github/workflows/ci.yml).
+
+Run all unit tests locally:
+```bash
+python3 -m unittest discover tests -v
+```
+
+---
+
+## 🔒 Security & Privacy
+
+We treat security and telemetry with the highest standard:
+- **No data collection or cloud sync**: All sensor calculations occur locally on your device.
+- **Responsible Disclosure**: Please review our [SECURITY.md](SECURITY.md) for vulnerability reporting guidelines.
+
+---
+
+## 🤝 Contributing
+
+We welcome community feedback, pull requests, and bug reports! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting code.
 
 ---
 
 ## 📜 Version History
 
-- **`v1.1.0`**: Split macOS packaging into distinct `BatteryAlert-macOS-Intel.dmg` and `BatteryAlert-macOS-AppleSilicon.dmg` packages to fix Intel compatibility. Configured AppKit Cocoa thread handling on macOS main thread. Added auto-update setting preparation structure.
-- **`v1.0.2`**: Introduced official Windows Inno Setup installer with Microsoft Store silent switches, Start Menu shortcuts, clean uninstaller, and GitHub Release automation.
-- **`v1.0.0`**: Initial release with native macOS Cocoa dialogs, Windows system tray, voice selection, customizable alert thresholds, and automated GitHub Release CI pipeline.
-
----
-
-## 🗺️ Roadmap
-
-- [ ] Microsoft Store App package submission.
-- [ ] Custom WAV file voice uploads.
-- [ ] Low battery percentage alert option (e.g. alert when battery drops below 20%).
-- [ ] Linux desktop support via LibNotify and AppIndicator.
-
----
-
-## ❓ Frequently Asked Questions (FAQ)
-
-#### Q: Does Battery Alert work if Launch on Startup is disabled?
-**A:** Yes! If Launch on Startup is OFF, the app works whenever you manually launch `BatteryAlert`. If enabled, it automatically starts in the background whenever you turn on your laptop.
-
-#### Q: Will it alert if my laptop is running on battery power?
-**A:** No. Alerts are triggered **only when the charger is connected** and the battery reaches your configured charge level.
-
-#### Q: How do I stop or exit the application?
-**A:** Right-click the battery icon in your macOS Menu Bar or Windows System Tray and select **Exit**.
-
----
-
-## 🤝 Contribution
-
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/Hardeepcoder/BatteryAlert/issues).
+- **`v1.4.0`**: Added macOS AppKit NSPanel native settings modal, drag-and-drop Applications DMG layout, and Android APK companion release integration.
+- **`v1.1.0`**: Split macOS builds into independent Intel and Apple Silicon native DMGs; introduced thread-safe Cocoa loop handling.
+- **`v1.0.2`**: Full Windows Inno Setup installer integration with Microsoft Store `/VERYSILENT` switches.
+- **`v1.0.0`**: Initial release with voice selection, customizable alert thresholds, and automated CI build pipeline.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is open-source under the [MIT License](LICENSE).
 
-Developed by **Coding's Art - HardeepCoder** • [codingsart.com](https://codingsart.com)
+Developed with ❤️ by **Coding's Art - HardeepCoder** • [codingsart.com](https://codingsart.com)
